@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Arcadia Market Alert
-// @namespace    https://github.com/Shikster/
+// @namespace    https://github.com/Shikster/Market-Alert.git
 // @version      2.0
 // @description  Find items in the market and alert via Discord Webhook
 // @author       Shikster
