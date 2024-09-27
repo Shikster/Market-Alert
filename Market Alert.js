@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Arcadia Market Alert
-// @namespace    https://github.com/Shikster/Market-Alert.git
+// @namespace    https://github.com/Shikster/Market-Alert
 // @version      2.0
 // @description  Find items in the market and alert via Discord Webhook
 // @author       Shikster
@@ -10,11 +10,12 @@
 // @icon         https://i.imgur.com/kqeQwJV.png
 // ==/UserScript==
 
+
 (function() {
     'use strict';
 
     let searchInterval;
-    const discordWebhookUrl = 'https://discord.com/api/webhooks/1288806809271930951/SSJYMYgIXH0ofPXZmO8BMlZZ4pC6RzQFd34PwpEPZe61zC0gY_zpUfQXnhXGaSRrT4yB';
+    const discordWebhookUrl = '';
     let sendQueue = [];
     let isSending = false;
 
