@@ -8,9 +8,35 @@ After Tampermonkey has been installed, use the button below to add Market-Alert 
 
 
 #### Webhooks
-If you want Market-Alert to send messages to your discord server, you may want to setup a webhook.
-This can be done by creating your own discord server (you need mod/admin perms), and then right clicking the setting cog in any channel (edit channel).
-Click on integrations, webhooks, and then New Webhook. The name for the webhook doesn't matter, as Market-Alert will override it with it's post function. 
-Copy the WebHook URL and paste it into the Discord Webhook URL field (after Market-Alert has been installed). 
+Market-Alert can send notifications directly to your Discord server! Here's how to set it up:
 
+1. Create a Discord Webhook:
+
+    You need "Manage Webhooks" permissions in your Discord server. If you don't have a server or the necessary permissions, you'll need to create one or ask a server administrator.
+
+    Go to the server and channel where you want to receive Market-Alert notifications.
+
+    Click on the channel name at the top of the Discord window.
+
+    Choose "Channel Settings" (the gear icon).
+
+    Select "Integrations" from the left sidebar.
+
+    Click on "Webhooks" and then click the "Create Webhook" button.
+
+    Copy the Webhook URL that is displayed – you'll need this later.
+
+2. Install Market-Alert:
+
+    If you haven't already, install the Market-Alert userscript. You can find the installation instructions [here (link to your GitHub repo)].
+
+3. Paste the Webhook URL into Market-Alert:
+
+    Once Market-Alert is installed, it will open a settings window.
+
+    Find the "Discord Webhook URL" field in the Market-Alert settings.
+
+    Paste the Webhook URL you copied earlier into this field.
+
+    Save the Market-Alert settings.
 **IMPORTANT: After setting the webhook via setup. Restart your browser!**
