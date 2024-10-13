@@ -6,3 +6,7 @@ After Tampermonkey has been installed, use the button below to add Market-Alert 
 ### [Click to Install](https://github.com/Shikster/Market-Alert/raw/main/Market%20Alert.js)
 
 If TamperMonkey is not prompted, feel free to add it manually. Make sure to insert a discord webhook url on line 18.
+
+[![Install](https://img.shields.io/badge/Install-Tampermonkey-brightgreen.svg?style=for-the-badge)](https://github.com/Shikster/Market-Alert/raw/main/Market%20Alert.js)
+
+[![Install](https://img.shields.io/badge/Install-Greasemonkey-brightgreen.svg?style=for-the-badge)](https://github.com/Shikster/Market-Alert/raw/main/Market%20Alert.js)
