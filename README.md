@@ -4,7 +4,4 @@ Market-Alert has only been tested in Firefox, there might be issues with any oth
 
 After Tampermonkey has been installed, use the button below to add Market-Alert to your TamperMonkey userscripts:
 
-
 [![Install](https://img.shields.io/badge/Install-Tampermonkey-brightgreen.svg?style=for-the-badge)](https://raw.githubusercontent.com/Shikster/Market-Alert/main/Market%20Alert.user.js)
-
-[![Install](https://img.shields.io/badge/Install-Greasemonkey-brightgreen.svg?style=for-the-badge)](https://raw.githubusercontent.com/Shikster/Market-Alert/main/Market%20Alert.user.js)
