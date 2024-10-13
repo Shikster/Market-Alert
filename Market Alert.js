@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Arcadia Market Alert
 // @namespace    https://github.com/Shikster/
-// @version      3.0
+// @version      4.1
 // @description  Find items in the market and alert via Discord Webhook
 // @author       Shikster
 // @match        https://cp.arcadia-online.org/market/vending/
@@ -14,9 +14,22 @@
     'use strict';
 
     let searchInterval;
-    const discordWebhookUrl = '';
+    let discordWebhookUrl = GM_getValue('discordWebhookUrl', ''); 
     let sendQueue = [];
     let isSending = false;
+
+    function startSearchLoop(userID, items, maxPages, intervalTime) {
+        if (searchInterval) {
+            clearInterval(searchInterval);
+        }
+
+        searchAndFind(userID, items, maxPages);
+
+        searchInterval = setInterval(() => {
+            console.log(`Searching for items: ${items.map(i => `${i.prefix ? i.prefix + ' ' : ''}${i.name}`).join(', ')}`);
+            searchAndFind(userID, items, maxPages);
+        }, intervalTime);
+    }
 
     function createPopup() {
         const popup = document.createElement('div');
@@ -36,6 +49,9 @@
             <h2>Find Items in Market</h2>
             <label for="userId">User ID:</label>
             <input type="text" id="userId" placeholder="e.g. 293837046349299712" style="width: calc(100% - 10px); padding: 5px;">
+            <br>
+            <label for="webhookUrl">Discord Webhook URL:</label>
+            <input type="text" id="webhookUrl" placeholder="Enter your webhook URL" style="width: calc(100% - 10px); padding: 5px;">
             <br>
             <table id="itemsTable" style="width: 100%; margin-top: 10px; border-collapse: collapse;">
                 <thead>
@@ -72,6 +88,7 @@
 
         const storedUserId = GM_getValue('userId', '');
         popup.querySelector('#userId').value = storedUserId;
+        popup.querySelector('#webhookUrl').value = discordWebhookUrl;
 
         document.body.appendChild(popup);
 
@@ -81,19 +98,21 @@
 
         popup.querySelector('#startButton').addEventListener('click', function() {
             const userId = popup.querySelector('#userId').value.trim();
+            const webhookUrl = popup.querySelector('#webhookUrl').value.trim();
             const maxPages = parseInt(popup.querySelector('#maxPages').value);
             const intervalTime = parseInt(popup.querySelector('#intervalTime').value) * 60 * 1000;
 
             GM_setValue('userId', userId);
+            GM_setValue('discordWebhookUrl', webhookUrl); 
 
             const items = [1, 2, 3, 4, 5].map(i => {
                 const name = popup.querySelector(`#item${i}_name`).value.trim();
                 const prefix = popup.querySelector(`#item${i}_prefix`).value || '';
                 const slots = popup.querySelector(`#item${i}_slots`).value || '';
-                const minAmount = parseInt(popup.querySelector(`#item${i}_minAmount`).value) || 1; // Default to 1 if not provided
-                const maxPrice = parseFloat(popup.querySelector(`#item${i}_maxPrice`).value) || 0;
+                const minAmount = parseInt(popup.querySelector(`#item${i}_minAmount`).value) || 1; 
+                const maxPrice = parseFloat(popup.querySelector(`#item${i}_maxPrice`).value) || 0; 
                 return { name, prefix, slots, minAmount, maxPrice };
-            }).filter(item => item.name); // Only include items with a name
+            }).filter(item => item.name); 
 
             startSearchLoop(userId, items, maxPages, intervalTime);
             document.body.removeChild(popup);
@@ -117,7 +136,7 @@
             avatar_url: 'https://i.imgur.com/kqeQwJV.png'
         };
 
-        fetch(discordWebhookUrl, {
+        fetch(discordWebhookUrl, { 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -134,7 +153,7 @@
         })
         .finally(() => {
             isSending = false;
-            setTimeout(processQueue, 1000);
+            setTimeout(processQueue, 1000); 
         });
     }
 
@@ -167,7 +186,7 @@
                     if (prefixMatch && fullItemName.toLowerCase() === item.name.toLowerCase() && slotsMatch && amountMatch) {
                         let priceElement = row.querySelector('td.text-end strong');
                         let priceText = priceElement ? priceElement.innerText.trim() : 'Price not found';
-                        let price = parseFloat(priceText.replace(/[^0-9.-]+/g, ""));
+                        let price = parseFloat(priceText.replace(/[^0-9.-]+/g, "")); 
 
                         if (price <= item.maxPrice) {
                             let shopElement = row.querySelector('a.link-to-shop');
@@ -175,7 +194,7 @@
                             let shopLink = shopElement ? `https://cp.arcadia-online.org${shopElement.getAttribute('href')}` : 'Link not found';
 
                             let messageContent = `Eep! I found: "**${prefixValue ? prefixValue + ' ' : ''}${fullItemName}${slots > 0 ? `[${slots}]` : ''}**"\n` +
-                                `Amount: **${amount}**\n` + // Added amount to the message
+                                `Amount: **${amount}**\n` + 
                                 `Price: **${priceText}**\n` +
                                 `Shop: **${shopName}**\n` +
                                 `Link: **${shopLink}**\n` +
@@ -192,28 +211,12 @@
             });
     }
 
-
-
-
     function searchAndFind(userID, items, maxPages) {
         items.forEach(item => {
             for (let i = 1; i <= maxPages; i++) {
                 findItemOnPage(item, i, userID);
             }
         });
-    }
-
-    function startSearchLoop(userID, items, maxPages, intervalTime) {
-        if (searchInterval) {
-            clearInterval(searchInterval);
-        }
-
-        searchAndFind(userID, items, maxPages);
-
-        searchInterval = setInterval(() => {
-            console.log(`Searching for items: ${items.map(i => `${i.prefix ? i.prefix + ' ' : ''}${i.name}`).join(', ')}`);
-            searchAndFind(userID, items, maxPages);
-        }, intervalTime);
     }
 
     createPopup();
