@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Arcadia Market Alert
-// @namespace    https://github.com/Shikster/Market-Alert
-// @version      2.0
+// @namespace    https://github.com/Shikster/
+// @version      3.0
 // @description  Find items in the market and alert via Discord Webhook
 // @author       Shikster
 // @match        https://cp.arcadia-online.org/market/vending/
@@ -9,7 +9,6 @@
 // @grant        GM_setValue
 // @icon         https://i.imgur.com/kqeQwJV.png
 // ==/UserScript==
-
 
 (function() {
     'use strict';
@@ -44,6 +43,7 @@
                         <th>Item Name</th>
                         <th>Refine Rate(0-10)</th>
                         <th>Slots (0-4)</th>
+                        <th>Min Amount</th>
                         <th>Max Price</th>
                     </tr>
                 </thead>
@@ -53,6 +53,7 @@
                             <td><input type="text" id="item${i}_name" placeholder="Item ${i}" style="width: 100%;"></td>
                             <td><input type="number" id="item${i}_prefix" min="0" max="10" placeholder="Refine Rate" style="width: 100%;"></td>
                             <td><input type="number" id="item${i}_slots" min="0" max="4" placeholder="Slots" style="width: 100%;"></td>
+                            <td><input type="number" id="item${i}_minAmount" min="1" placeholder="Min Amount" style="width: 100%;"></td>
                             <td><input type="number" id="item${i}_maxPrice" placeholder="Max Price" style="width: 100%;"></td>
                         </tr>
                     `).join('')}
@@ -89,8 +90,9 @@
                 const name = popup.querySelector(`#item${i}_name`).value.trim();
                 const prefix = popup.querySelector(`#item${i}_prefix`).value || '';
                 const slots = popup.querySelector(`#item${i}_slots`).value || '';
+                const minAmount = parseInt(popup.querySelector(`#item${i}_minAmount`).value) || 1; // Default to 1 if not provided
                 const maxPrice = parseFloat(popup.querySelector(`#item${i}_maxPrice`).value) || 0;
-                return { name, prefix, slots, maxPrice };
+                return { name, prefix, slots, minAmount, maxPrice };
             }).filter(item => item.name); // Only include items with a name
 
             startSearchLoop(userId, items, maxPages, intervalTime);
@@ -143,53 +145,51 @@
         fetch(searchUrl)
             .then(response => response.text())
             .then(html => {
-            let parser = new DOMParser();
-            let doc = parser.parseFromString(html, 'text/html');
-            let items = doc.querySelectorAll('.item_name');
+                let parser = new DOMParser();
+                let doc = parser.parseFromString(html, 'text/html');
+                let items = doc.querySelectorAll('.item_name');
 
-            items.forEach(itemElement => {
-                const fullItemName = itemElement.innerText.trim();
-                const row = itemElement.closest('tr');
+                items.forEach(itemElement => {
+                    const fullItemName = itemElement.innerText.trim();
+                    const row = itemElement.closest('tr');
 
-                // Extract slot information directly from the correct table cell
-                const slotText = row.querySelector('td.normalslotted').innerText.trim();
-                const slots = slotText.match(/\[(\d+)\]/) ? slotText.match(/\[(\d+)\]/)[1] : '0';
+                    const slotText = row.querySelector('td.normalslotted').innerText.trim();
+                    const slots = slotText.match(/\[(\d+)\]/) ? slotText.match(/\[(\d+)\]/)[1] : '0';
 
-                // Prefix logic
-                const prefixValue = item.prefix !== '0' ? `+${item.prefix}` : '';
-                const prefixMatch = (item.prefix === '0' || !item.prefix) || (prefixValue === itemElement.previousSibling.textContent.trim());
+                    const prefixValue = item.prefix !== '0' ? `+${item.prefix}` : '';
+                    const prefixMatch = (item.prefix === '0' || !item.prefix) || (prefixValue === itemElement.previousSibling.textContent.trim());
 
-                // Ensure slots match exactly
-                const slotsMatch = slots === item.slots.toString(); // Convert to string for comparison
+                    const slotsMatch = slots === item.slots.toString();
 
-                if (prefixMatch && fullItemName.toLowerCase() === item.name.toLowerCase() && slotsMatch) {
-                    let priceElement = row.querySelector('td.text-end strong');
-                    let priceText = priceElement ? priceElement.innerText.trim() : 'Price not found';
-                    let price = parseFloat(priceText.replace(/[^0-9.-]+/g, "")); // Convert to number
+                    const amount = parseInt(row.querySelector('td:nth-child(3)').innerText.trim()) || 0;
+                    const amountMatch = amount >= item.minAmount;
 
-                    if (price <= item.maxPrice) {
-                        let shopElement = row.querySelector('a.link-to-shop');
-                        let shopName = shopElement ? shopElement.innerText.trim() : 'Shop not found';
-                        let shopLink = shopElement ? `https://cp.arcadia-online.org${shopElement.getAttribute('href')}` : 'Link not found';
+                    if (prefixMatch && fullItemName.toLowerCase() === item.name.toLowerCase() && slotsMatch && amountMatch) {
+                        let priceElement = row.querySelector('td.text-end strong');
+                        let priceText = priceElement ? priceElement.innerText.trim() : 'Price not found';
+                        let price = parseFloat(priceText.replace(/[^0-9.-]+/g, ""));
 
-                        // Adjust message content
-                        let messageContent = `Eep! I found: "**${prefixValue ? prefixValue + ' ' : ''}${fullItemName}${slots > 0 ? `[${slots}]` : ''}**"\n` +
-                            `Price: **${priceText}**\n` +
-                            `Shop: **${shopName}**\n` +
-                            `Link: **${shopLink}**\n` +
-                            `Squeek!\n` +
-                            `<@${userID}>`;
+                        if (price <= item.maxPrice) {
+                            let shopElement = row.querySelector('a.link-to-shop');
+                            let shopName = shopElement ? shopElement.innerText.trim() : 'Shop not found';
+                            let shopLink = shopElement ? `https://cp.arcadia-online.org${shopElement.getAttribute('href')}` : 'Link not found';
 
+                            let messageContent = `Eep! I found: "**${prefixValue ? prefixValue + ' ' : ''}${fullItemName}${slots > 0 ? `[${slots}]` : ''}**"\n` +
+                                `Amount: **${amount}**\n` + // Added amount to the message
+                                `Price: **${priceText}**\n` +
+                                `Shop: **${shopName}**\n` +
+                                `Link: **${shopLink}**\n` +
+                                `Squeek!\n` +
+                                `<@${userID}>`;
 
-                        sendToDiscord(messageContent);
+                            sendToDiscord(messageContent);
+                        }
                     }
-                }
-            });
-
-        })
+                });
+            })
             .catch(error => {
-            console.error(`Error fetching page ${pageNumber}:`, error);
-        });
+                console.error(`Error fetching page ${pageNumber}:`, error);
+            });
     }
 
 
